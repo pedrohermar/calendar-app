@@ -5,6 +5,7 @@ import { authSlice } from "../../src/store"
 import { useAuthStore } from "../../src/hooks/useAuthStore"
 import { initialState, notAuthenticatedState } from "../fixtures/authStates"
 import { testUserCredentials } from "../fixtures/testUser"
+import calendarApi from "../../src/api/calendarApi"
 
 const getMockStore = ( initialState ) => {
     
@@ -19,6 +20,8 @@ const getMockStore = ( initialState ) => {
 }
 
 describe('Pruebas en useAuthStore', () => { 
+
+    beforeEach( () => localStorage.clear() )
 
     test('Debe regresar los valores por defecto', () => { 
 
@@ -40,7 +43,6 @@ describe('Pruebas en useAuthStore', () => {
 
     test('startLogin debe realizar el login correctamente', async () => { 
 
-        localStorage.clear()
         const mockStore = getMockStore({...notAuthenticatedState})
         const { result } = renderHook( () => useAuthStore(), {
             wrapper: ({ children }) => <Provider store={ mockStore } >{ children }</Provider>
@@ -64,7 +66,6 @@ describe('Pruebas en useAuthStore', () => {
 
     test('startLogin debe fallar la autenticación', async() => { 
 
-        localStorage.clear()
         const mockStore = getMockStore({...notAuthenticatedState})
         const { result } = renderHook( () => useAuthStore(), {
             wrapper: ({ children }) => <Provider store={ mockStore } >{ children }</Provider>
@@ -87,5 +88,58 @@ describe('Pruebas en useAuthStore', () => {
         )
 
      })
+
+     test('startRegister debe crear un usuario', async() => {
+
+        const newUser = { email: 'algo@correo.com', password: 'ABC123', name: 'Test User 2'}
+
+        const mockStore = getMockStore({...notAuthenticatedState})
+        const { result } = renderHook( () => useAuthStore(), {
+            wrapper: ({ children }) => <Provider store={ mockStore } >{ children }</Provider>
+        })
+
+        const spy = jest.spyOn( calendarApi, 'post' ).mockReturnValue({
+            data: {
+                ok: true,
+                uid: "ALGUN-ID",
+                name: "Test User",
+                token: "ALGUN-TOKEN"
+            }
+        })
+
+        await act( async() => {
+            await result.current.startRegister(newUser)
+        })
+
+        const { errorMessage, status, user } = result.current
+        expect({ errorMessage, status, user }).toEqual({
+            errorMessage: undefined,
+            status: 'authenticated',
+            user: { name: 'Test User', uid: 'ALGUN-ID' }
+        })
+
+        spy.mockRestore()
+
+      })
+
+    test('startRegister debe fallar si el usuario ya existe', async() => { 
+
+        const mockStore = getMockStore({...notAuthenticatedState})
+        const { result } = renderHook( () => useAuthStore(), {
+            wrapper: ({ children }) => <Provider store={ mockStore } >{ children }</Provider>
+        })
+
+        await act( async() => {
+            await result.current.startRegister(testUserCredentials)
+        })
+
+        const { errorMessage, status, user } = result.current
+        expect({ errorMessage, status, user }).toEqual({
+            errorMessage: 'Un usuario existe con ese correo',
+            status: 'not-authenticated',
+            user: {}
+        })
+
+    })
 
  })
