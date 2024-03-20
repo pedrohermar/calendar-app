@@ -4,20 +4,20 @@ import { useUiStore } from "../../src/hooks/useUiStore"
 import { store, uiSlice } from "../../src/store"
 import { configureStore } from "@reduxjs/toolkit"
 
+const getMockStore = ( initialState ) => {
+
+    return configureStore({
+        reducer: {
+            ui: uiSlice.reducer
+        },
+        preloadedState: {
+            ui: {...initialState}
+        }
+    })
+}
 
 describe('Pruebas en useUiStore', () => { 
     
-    const getMockStore = ( initialState ) => {
-    
-        return configureStore({
-            reducer: {
-                ui: uiSlice.reducer
-            },
-            preloadedState: {
-                ui: {...initialState}
-            }
-        })
-    }
     
     test('Debe devolver los valores por defecto', () => { 
         
