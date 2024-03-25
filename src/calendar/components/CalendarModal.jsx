@@ -10,6 +10,7 @@ import "react-datepicker/dist/react-datepicker.css";
 
 import { useCalendarStore, useUiStore } from "../../hooks";
 import es from 'date-fns/locale/es'
+import { getEnv } from "../../helpers";
 registerLocale('es', es)
 
 const customStyles = {
@@ -23,7 +24,9 @@ const customStyles = {
   },
 };
 
-Modal.setAppElement("#root");
+if( getEnv().VITE_MODE !== 'test' ){
+  Modal.setAppElement("#root");
+}
 
 export const CalendarModal = () => {
 
